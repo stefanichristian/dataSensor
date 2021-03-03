@@ -24,7 +24,7 @@ def getTable (filepath):
         line = file.readline()
     return m
 
-mat=scipy.io.loadmat('../Workspace_con_tutte_le_variabili.mat')
+#mat=scipy.io.loadmat('../Workspace_con_tutte_le_variabili.mat')
 
 appa1=getTable("APPA1.txt")
 appa2=getTable("APPA2.txt")
