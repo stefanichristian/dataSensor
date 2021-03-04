@@ -5,7 +5,7 @@ import pickle
 
 days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 mouths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-process = 1
+process = 8
 number_sensor = 8
 pathname = "aa.txt" #file where you read the data
 id_process = 1 #id of start process
@@ -56,30 +56,26 @@ def create_np_array(number_sens):
     for id in range(number_sens):
         x = np.append(x, [["Risc_"+str(id+1)], ["Signal_"+str(id+1)], ["Volt_"+str(id+1)]])
     x = np.append(x, [["Temp"], ["Rh%"]])
-    #print(x)
     return x
 
 
 def type_line(line):
     word = line[0:3]
-    #print("line: "+str(line))
     if word == '':
-        print("end of file")
-        return 3
+        return -1
     elif word in days:
-        print("line: 0: " + str(line))
         return 0
     elif word[0] == 'S' and  word[1].isnumeric() and word[2].isnumeric():
-        print("line: 1: " + str(line))
         return 1
     elif word[0] == 'T' and word[1] == ':':
-        print("line: 2: " + str(line))
         return 2
     else:
-        print("line: -1: " + str(line))
         return -1
 
+
 def is_broken_line(line):
+    if line == '':
+        return -1
     for word in line.split():
         if word in days:
             return 0
@@ -89,6 +85,7 @@ def is_broken_line(line):
             return 2
         else:
             return -1
+    return -1                                       #non itera se la riga è vuota, ma il primo if non funziona boh
 
 def take_datatime(line):
     str = ""
@@ -111,27 +108,17 @@ def recovery_list(file, start_byte):
         supp_list.append("NaN")
     while not exit:
         line = file.readline()
-        #print("line: "+line)
         tp = type_line(line)
         if tp == -1:
-            if is_broken_line(line) == 0:
-                tp = 0
-            elif is_broken_line(line) == 1:
-                tp = 1
-            elif is_broken_line(line) == 2:
-                tp = 2
-            else:
-                pass
+            tp = is_broken_line(line)
         if tp == 0:
             supp_list[0]= take_datatime(line)
         elif tp == 1:
             sens_data = line.split(":")
-            # print("sens_data: "+str(sens_data))
             for id in range(3):
                 supp_list[(((int(sens_data[0][1]))-1)*3)+1+id] = (float(sens_data[id + 1]))
         elif tp == 2:
             sens_data = line.split(":")
-            # print("sens_data: "+str(sens_data))
             take = False
             last = -2
             for w in sens_data:
@@ -142,9 +129,8 @@ def recovery_list(file, start_byte):
                 if "T" == w or "H" == w:
                     take = True
             exit = True
-        elif tp == 3 or tp == -1:               #end of file
+        elif tp == -1:               #end of file or end data
             exit = True
-    print("exit rec")
     return supp_list
 
 
@@ -160,16 +146,8 @@ def get_data(start, end, filepath, number_sens, id_process):
         line = file.readline()
         tp = type_line(line)
         if tp == -1:
-            if is_broken_line(line) == 0:
-                tp = 0
-            elif is_broken_line(line) == 1:
-                tp = 1
-            elif is_broken_line(line) == 2:
-                tp = 2
-            else:
-                tp = -1
+            tp = is_broken_line(line)
         if tp == 0:
-            #print(list)
             first_byte_mis = int(file.tell())-len(line)
             thereisdata = True
             list = []
@@ -177,13 +155,11 @@ def get_data(start, end, filepath, number_sens, id_process):
         elif tp == 1:
             thereisdata = True
             sens_data = line.split(":")
-            #print("sens_data: "+str(sens_data))
             for id in range(3):
                 list.append(float(sens_data[id+1]))
         elif tp == 2:
             thereisdata = True
             gen_data = line.split(":")
-            # print("sens_data: "+str(sens_data))
             take = False
             for w in gen_data:
                 if take:
@@ -191,31 +167,18 @@ def get_data(start, end, filepath, number_sens, id_process):
                     take = False
                 if "T" == w or "H" == w:
                     take = True
-            if len(list) != (number_sens*3)+3:
-                thereisdata = False
-                list = recovery_list(file, first_byte_mis)
-            if firsttime:
-                array_data = np.array([list], dtype=str)
-                firsttime= False
-                thereisdata = False
-            else:
-                thereisdata = False
-                array_data = np.append(array_data, [list], axis=0)
         else:
             if thereisdata and len(list) != (number_sens*3)+3:
-                thereisdata = False
-                print("enter")
                 list = recovery_list(file, first_byte_mis)
-                if firsttime:
-                    print("insert")
-                    array_data = np.array([list], dtype=str)
-                    firsttime = False
-                else:
-                    print("insert")
-                    array_data = np.append(array_data, [list], axis=0)
+            if thereisdata and firsttime:
+                thereisdata = False
+                array_data = np.array([list], dtype=str)
+                firsttime = False
+            elif thereisdata:
+                thereisdata = False
+                array_data = np.append(array_data, [list], axis=0)
         seek = file.tell()
     file.close()
-    #print("finish")
     return array_data
 
 
@@ -243,8 +206,7 @@ def create_table_txt(array,filename):
     return True
 
 
-def create_pck_obj(array):
-    filename = 'data_sensor_gas'
+def create_pck_obj(array, filename):
     outfile = open(filename, 'wb')
     pickle.dump(array, outfile)
     outfile.close()
@@ -252,13 +214,18 @@ def create_pck_obj(array):
     return True
 
 
+print("Hello, which file do you want analyze?")
+pathname = input("Write name with extension ex-> data.log\n") or "aa.txt"
+process = int(input("How many process do you want create?\n") or "8")
 start = time.perf_counter()
 data_sens = add_result()
-#print("DIO: "+str(data_sens[:,1]))
-create_table_txt(data_sens, "datisensori.txt")
-#xx = get_data(0, 3067992, pathname, number_sensor,1)
 finish = time.perf_counter()
 print(f'Finished in {round(finish-start,2)} second(s)')
+choose = input("Digits \"1\" for create a file txt or \"2\" to save the np array as pickle file or \"Q\" to quit\n")
+if choose == "1":
+    name = input("Name file?\n") or "datisensori.txt"
+    create_table_txt(data_sens, name)
+if choose == "2":
+    name = input("Name file?\n") or "datisensori"
+    create_pck_obj(data_sens, name)
 
-
-#get_data(0,18372,"pathname, number_sensor)
