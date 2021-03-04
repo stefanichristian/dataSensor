@@ -18,6 +18,6 @@ def get_table (filepath):
     print(file.tell())
 
 
-get_table("aa.txt")
+get_table("web_app/example/aa.txt")
 
 

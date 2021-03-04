@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import  FileStorage
+import scriptGetData as sns
 
 UPLOAD_FOLDER = 'file_uploaded'
 ALLOWED_EXTENSIONS = {'txt', 'log'}
@@ -21,9 +22,10 @@ def submit():
         file = request.files['myfile']
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        number_process = request.form['num_proc']
+        number_process = int (request.form['num_proc'])
+        number_sensor = int(request.form['num_sens'])
         #print("file type: ", str(myfilelog))
-        print("number of process: ", str(number_process))
+        sns.run("file_uploaded/aa.txt", number_process, number_sensor)
         return 'file uploaded successfully'
 
 if __name__ == '__main__':

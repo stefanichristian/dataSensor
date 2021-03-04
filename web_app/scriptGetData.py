@@ -217,15 +217,17 @@ pathname = input("Write name with extension ex-> data.log\n") or "aa.txt"
 process = int(input("How many process do you want create?\n") or "8")
 number_sensor = int(input("How many sensor do you have?\n") or "8")
 """
-start = time.perf_counter()
-# data_sens = add_result(pathname, process, number_sensor)
-data_sens = add_result("aa.txt", 8, 8)
-finish = time.perf_counter()
-print(f'Finished in {round(finish-start,2)} second(s)')
-choose = input("Digits \"1\" for create a file txt or \"2\" to save the np array as pickle file or \"Q\" to quit\n")
-if choose == "1":
-    name = input("Name file?\n") or "datisensori.txt"
-    create_table_txt(data_sens, name)
-if choose == "2":
-    name = input("Name file?\n") or "datisensori"
-    create_pck_obj(data_sens, name)
+def run(pathname, process, number_sensor):
+    start = time.perf_counter()
+    data_sens = add_result(pathname, process, number_sensor)
+    # data_sens = add_result("file_uploaded/aa.txt", 8, 8)
+    finish = time.perf_counter()
+    print(f'Finished in {round(finish-start,2)} second(s)')
+    choose = input("Digits \"1\" for create a file txt or \"2\" to save the np array as pickle file or \"Q\" to quit\n")
+    if choose == "1":
+        name = input("Name file?\n") or "datisensori.txt"
+        create_table_txt(data_sens, name)
+    if choose == "2":
+        name = input("Name file?\n") or "datisensori"
+        create_pck_obj(data_sens, name)
+    return True
