@@ -22,7 +22,7 @@ def set_proc_data(np, filepath):
         ll.append("")
     print("fsize: " + str(filesz))
     print("byte_min_proc: " + str(byte_for_proc))
-    xx = data_for_proc_rec(byte_for_proc, np, file, 0, ll,filesz)
+    xx = data_for_proc_rec(byte_for_proc, np, file, 0, ll, filesz)
     file.close()
     print(xx)
     return xx
@@ -98,9 +98,9 @@ def take_datatime(line):
             save = False
     return str
 
+
 def recovery_list(n):
-    pass
-    #print("recovery list")
+    print("recovery list")
 
 
 def get_data(start, end, filepath, number_sens,id_process):
@@ -153,33 +153,33 @@ def get_data(start, end, filepath, number_sens,id_process):
 
 
 def add_result():
-    ll = set_proc_data(process, "aa.txt")
+    ll = set_proc_data(process, pathname)
     ll.insert(0,0)
+    #print("ll: ",str(ll))
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        results = [executor.submit(get_data, ll[i-1], ll[i], "aa.txt", number_sensor,i) for i in range(1, len(ll))]
+        results = [executor.submit(get_data, ll[i-1], ll[i], pathname, number_sensor,i) for i in range(1, len(ll))]
 
     array = create_np_array(number_sensor)
     ff = True
-    for f in concurrent.futures.as_completed(results):
-        if ff:
-            array = np.append([array], f.result(), axis=0)
-            ff = False
-        else:
-            array = np.append(array, f.result(), axis=0)
-        print(array)
-
-
+    if concurrent.futures.ALL_COMPLETED:
+        for id in range(process):
+            if ff:
+                array = np.append([array], results[id].result(), axis=0)
+                ff = False
+            else:
+                array = np.append(array, results[id].result(), axis=0)
+    return True
     #array = np.append([array], xx, axis=0)
     #print(array)
-    np.savetxt("ciccio.txt",array, fmt='%s')
+    np.savetxt("ciccio.txt", array, fmt='%s')
 
 
 #create_np_array(8)
 start = time.perf_counter()
 add_result()
-#xx = get_data(0, 3067992, "aa.txt", number_sensor,1)
+#xx = get_data(0, 3067992, pathname, number_sensor,1)
 finish = time.perf_counter()
 print(f'Finished in {round(finish-start,2)} second(s)')
 
 
-#get_data(0,18372,"aa.txt", number_sensor)
+#get_data(0,18372,"pathname, number_sensor)
