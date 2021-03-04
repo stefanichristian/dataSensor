@@ -27,7 +27,8 @@ def getTable (filepath):
 #mat=scipy.io.loadmat('../Workspace_con_tutte_le_variabili.mat')
 
 appa1=getTable("APPA1.txt")
-appa2=getTable("APPA2.txt")
+print(appa1[:, 1])
+#appa2=getTable("APPA2.txt")
 
 #print(mat["R3_appa2"][4])
 
