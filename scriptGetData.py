@@ -1,15 +1,14 @@
 import concurrent.futures
 import numpy as np
 import time
+import pickle
 
 days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 mouths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-process = 4
+process = 1
 number_sensor = 8
-pathname = "aa.txt"
-id_process = 1
-
-# array_data=np.array([["Data"],["Data"],])
+pathname = "aa.txt" #file where you read the data
+id_process = 1 #id of start process
 
 
 def set_proc_data(np, filepath):
@@ -20,34 +19,20 @@ def set_proc_data(np, filepath):
     ll = []
     for _ in range(np):
         ll.append("")
-    print("fsize: " + str(filesz))
+    print("file size: " + str(filesz))
     print("byte_min_proc: " + str(byte_for_proc))
-    xx = data_for_proc_rec(byte_for_proc, np, file, 0, ll, filesz)
+    print("expected number of process: "+str(process))
+    list_read_byte = data_for_proc_rec(byte_for_proc, np, file, 0, ll, filesz)
     file.close()
-    print(xx)
-    return xx
-
-"""
-def data_for_proc(byte, np, file):
-    list = [byte]
-    file.seek(byte, 0)
-    #print("for_p: " + str(file.tell()))
-    ex = False
-    while not ex:
-        line = file.readline()
-        for word in line.split():
-            if word in days:
-                print("w at: " + str(file.tell() - len(line)))
-                list[0] = file.tell() - len(line)
-                ex = True
-    file.seek(list[0], 0)
-"""
+    return list_read_byte
 
 
 def data_for_proc_rec(byte, num_p, file, id_proc, list, filesz):
-    #print("call: byte "+str(byte)+", num_p "+str(num_p)+", id_proc "+str(id_proc)+", list "+str(list))
     if id_proc == 0:
         file.seek(byte, 0)
+        if id_proc == num_p-1:    #exception for just one process
+            list[id_proc] = filesz
+            return list
     elif id_proc == num_p-1:
         list[id_proc] = filesz
         return list
@@ -77,14 +62,33 @@ def create_np_array(number_sens):
 
 def type_line(line):
     word = line[0:3]
-    if word in days:
+    #print("line: "+str(line))
+    if word == '':
+        print("end of file")
+        return 3
+    elif word in days:
+        print("line: 0: " + str(line))
         return 0
     elif word[0] == 'S' and  word[1].isnumeric() and word[2].isnumeric():
+        print("line: 1: " + str(line))
         return 1
     elif word[0] == 'T' and word[1] == ':':
+        print("line: 2: " + str(line))
         return 2
     else:
+        print("line: -1: " + str(line))
         return -1
+
+def is_broken_line(line):
+    for word in line.split():
+        if word in days:
+            return 0
+        elif word[0] == 'S' and  word[1].isnumeric() and word[2].isnumeric():
+            return 1
+        elif word[0] == 'T' and word[1] == ':':
+            return 2
+        else:
+            return -1
 
 def take_datatime(line):
     str = ""
@@ -92,37 +96,92 @@ def take_datatime(line):
     for word in line.split():
         if word in mouths:
             save = True
-        if save:
-            str += " "+word
         if "GMT" in word:
             save = False
+        if save:
+            str += " "+word
     return str
 
 
-def recovery_list(n):
-    print("recovery list")
+def recovery_list(file, start_byte):
+    exit = False
+    file.seek(start_byte, 0)
+    supp_list = []
+    for _ in range((number_sensor * 3) + 3):
+        supp_list.append("NaN")
+    while not exit:
+        line = file.readline()
+        #print("line: "+line)
+        tp = type_line(line)
+        if tp == -1:
+            if is_broken_line(line) == 0:
+                tp = 0
+            elif is_broken_line(line) == 1:
+                tp = 1
+            elif is_broken_line(line) == 2:
+                tp = 2
+            else:
+                pass
+        if tp == 0:
+            supp_list[0]= take_datatime(line)
+        elif tp == 1:
+            sens_data = line.split(":")
+            # print("sens_data: "+str(sens_data))
+            for id in range(3):
+                supp_list[(((int(sens_data[0][1]))-1)*3)+1+id] = (float(sens_data[id + 1]))
+        elif tp == 2:
+            sens_data = line.split(":")
+            # print("sens_data: "+str(sens_data))
+            take = False
+            last = -2
+            for w in sens_data:
+                if take:
+                    supp_list[last] = (float(w))
+                    last += 1
+                    take = False
+                if "T" == w or "H" == w:
+                    take = True
+            exit = True
+        elif tp == 3 or tp == -1:               #end of file
+            exit = True
+    print("exit rec")
+    return supp_list
 
 
-def get_data(start, end, filepath, number_sens,id_process):
-    print("process created, id: "+str(id_process))
-    file=open(filepath, "r")
+def get_data(start, end, filepath, number_sens, id_process):
+    print("process created with id: "+str(id_process)+", read_byte from "+str(start)+" to "+str(end))
+    file = open(filepath, "r")
     firsttime = True
+    thereisdata = False
     file.seek(start, 0)
     seek = start
     list = []
     while seek < end:
         line = file.readline()
         tp = type_line(line)
+        if tp == -1:
+            if is_broken_line(line) == 0:
+                tp = 0
+            elif is_broken_line(line) == 1:
+                tp = 1
+            elif is_broken_line(line) == 2:
+                tp = 2
+            else:
+                tp = -1
         if tp == 0:
             #print(list)
+            first_byte_mis = int(file.tell())-len(line)
+            thereisdata = True
             list = []
             list.append(take_datatime(line))
         elif tp == 1:
+            thereisdata = True
             sens_data = line.split(":")
             #print("sens_data: "+str(sens_data))
             for id in range(3):
                 list.append(float(sens_data[id+1]))
         elif tp == 2:
+            thereisdata = True
             gen_data = line.split(":")
             # print("sens_data: "+str(sens_data))
             take = False
@@ -133,29 +192,36 @@ def get_data(start, end, filepath, number_sens,id_process):
                 if "T" == w or "H" == w:
                     take = True
             if len(list) != (number_sens*3)+3:
-                recovery_list(number_sens)
+                thereisdata = False
+                list = recovery_list(file, first_byte_mis)
+            if firsttime:
+                array_data = np.array([list], dtype=str)
+                firsttime= False
+                thereisdata = False
             else:
-                if firsttime:
-                    array_data = np.array([list], dtype=str)
-                    firsttime= False
-                else:
-                    array_data = np.append(array_data, [list],axis=0)
+                thereisdata = False
+                array_data = np.append(array_data, [list], axis=0)
         else:
-            pass
-            #print("len: "+str(len(list)))
-            #print("table: "+str(array_data))
-            #print("All Good!")
+            if thereisdata and len(list) != (number_sens*3)+3:
+                thereisdata = False
+                print("enter")
+                list = recovery_list(file, first_byte_mis)
+                if firsttime:
+                    print("insert")
+                    array_data = np.array([list], dtype=str)
+                    firsttime = False
+                else:
+                    print("insert")
+                    array_data = np.append(array_data, [list], axis=0)
         seek = file.tell()
     file.close()
+    #print("finish")
     return array_data
-    #print("table:"+str(array_data))#
-    #print("first row: "+str(array_data[0][19])+ " type: "+str(type(array_data[0][1])))
 
 
 def add_result():
     ll = set_proc_data(process, pathname)
     ll.insert(0,0)
-    #print("ll: ",str(ll))
     with concurrent.futures.ProcessPoolExecutor() as executor:
         results = [executor.submit(get_data, ll[i-1], ll[i], pathname, number_sensor,i) for i in range(1, len(ll))]
 
@@ -168,15 +234,28 @@ def add_result():
                 ff = False
             else:
                 array = np.append(array, results[id].result(), axis=0)
+    return array
+
+
+def create_table_txt(array,filename):
+    np.savetxt(filename, array, fmt='%s')
+    print("created a file that contains data named: "+str(filename))
     return True
-    #array = np.append([array], xx, axis=0)
-    #print(array)
-    np.savetxt("ciccio.txt", array, fmt='%s')
 
 
-#create_np_array(8)
+def create_pck_obj(array):
+    filename = 'data_sensor_gas'
+    outfile = open(filename, 'wb')
+    pickle.dump(array, outfile)
+    outfile.close()
+    print("created a file pickle that contains data in a np array: " + str(filename))
+    return True
+
+
 start = time.perf_counter()
-add_result()
+data_sens = add_result()
+#print("DIO: "+str(data_sens[:,1]))
+create_table_txt(data_sens, "datisensori.txt")
 #xx = get_data(0, 3067992, pathname, number_sensor,1)
 finish = time.perf_counter()
 print(f'Finished in {round(finish-start,2)} second(s)')
