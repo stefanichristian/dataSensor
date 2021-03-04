@@ -5,13 +5,10 @@ import pickle
 
 days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 mouths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-process = 8
-number_sensor = 8
-pathname = "aa.txt" #file where you read the data
 id_process = 1 #id of start process
 
 
-def set_proc_data(np, filepath):
+def set_proc_data(np, filepath,number_process):
     file = open(filepath, "r")
     file.seek(0, 2)
     filesz = file.tell()
@@ -21,7 +18,7 @@ def set_proc_data(np, filepath):
         ll.append("")
     print("file size: " + str(filesz))
     print("byte_min_proc: " + str(byte_for_proc))
-    print("expected number of process: "+str(process))
+    print("expected number of process: "+str(number_process))
     list_read_byte = data_for_proc_rec(byte_for_proc, np, file, 0, ll, filesz)
     file.close()
     return list_read_byte
@@ -100,7 +97,7 @@ def take_datatime(line):
     return str
 
 
-def recovery_list(file, start_byte):
+def recovery_list(file, start_byte, number_sensor):
     exit = False
     file.seek(start_byte, 0)
     supp_list = []
@@ -169,7 +166,7 @@ def get_data(start, end, filepath, number_sens, id_process):
                     take = True
         else:
             if thereisdata and len(list) != (number_sens*3)+3:
-                list = recovery_list(file, first_byte_mis)
+                list = recovery_list(file, first_byte_mis, number_sens)
             if thereisdata and firsttime:
                 thereisdata = False
                 array_data = np.array([list], dtype=str)
@@ -182,8 +179,8 @@ def get_data(start, end, filepath, number_sens, id_process):
     return array_data
 
 
-def add_result():
-    ll = set_proc_data(process, pathname)
+def add_result(pathname, process, number_sensor):
+    ll = set_proc_data(process, pathname, process)
     ll.insert(0,0)
     with concurrent.futures.ProcessPoolExecutor() as executor:
         results = [executor.submit(get_data, ll[i-1], ll[i], pathname, number_sensor,i) for i in range(1, len(ll))]
@@ -213,12 +210,16 @@ def create_pck_obj(array, filename):
     print("created a file pickle that contains data in a np array: " + str(filename))
     return True
 
-
+# data_sens = add_result()
+"""
 print("Hello, which file do you want analyze?")
 pathname = input("Write name with extension ex-> data.log\n") or "aa.txt"
 process = int(input("How many process do you want create?\n") or "8")
+number_sensor = int(input("How many sensor do you have?\n") or "8")
+"""
 start = time.perf_counter()
-data_sens = add_result()
+# data_sens = add_result(pathname, process, number_sensor)
+data_sens = add_result("aa.txt", 8, 8)
 finish = time.perf_counter()
 print(f'Finished in {round(finish-start,2)} second(s)')
 choose = input("Digits \"1\" for create a file txt or \"2\" to save the np array as pickle file or \"Q\" to quit\n")
@@ -228,4 +229,3 @@ if choose == "1":
 if choose == "2":
     name = input("Name file?\n") or "datisensori"
     create_pck_obj(data_sens, name)
-
