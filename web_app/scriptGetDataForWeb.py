@@ -207,6 +207,11 @@ def create_pck_obj(array, filename):
     print("created a file pickle that contains data in a np array: " + str(filename))
     return True
 
+
+def decrypte_pck_obj(infile):
+    array = pickle.load(infile)
+    infile.close()
+    return array
 # data_sens = add_result()
 """
 print("Hello, which file do you want analyze?")
@@ -227,4 +232,4 @@ def run(file, process, number_sensor):
     if choose == "2":
         name = input("Name file?\n") or "datisensori"
         create_pck_obj(data_sens, name)
-    return True
+    return data_sens
