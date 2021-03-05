@@ -1,0 +1,13 @@
+.container{
+    max-width: 400px;
+    font-color: red;
+}
+.number {
+    width: 100%;
+}
+li.nav-item {
+    width:30%;
+}
+ul.nav{
+    margin-bottom: 10px;
+}

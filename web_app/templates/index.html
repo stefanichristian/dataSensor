@@ -3,19 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <title>aaaaa</title>
+    <link rel="stylesheet" href="https://bootswatch.com/4/darkly/bootstrap.min.css">
+    <link rel="stylesheet" href="../static/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
 </head>
 <body>
-    <form action="/submit" method="POST" enctype="multipart/form-data">
-        <div class="form-group">
-            <h3> Upload the file </h3>
-            <label for="myfile">Select a file:</label>
-            <input type="file" id="myfile" name="myfile"><br><br>
-            <label for="myfile">number of process:</label>
-            <input type="number" id="num_proc" name="num_proc"><br><br>
-            <label for="myfile">number of sens:</label>
-            <input type="number" id="num_sens" name="num_sens"><br><br>
-            <input type="submit">
-        </div>
-    </form>
+
+    <div class="container">
+        <br><br><br><br><br><br>
+        <ul class="nav nav-pills nav-fill">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">LOG FILE</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">TXT FILE</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">PICKLE FILE</a>
+          </li>
+        </ul>
+
+        <form class ="form-group" action="/submit" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <h4 id="hh"> Upload the file </h4>
+                <div class="form-row">
+                    <div class="col">
+                        <input type="file" id="inputFile" name="myfile" hidden/>
+                        <label for="inputFile" class="btn btn-info">Choose file</label>
+                        <span id="file-chosen">  No file chosen</span><br>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col">
+                        <label for="num_proc">number of process:</label>
+                    </div>
+                    <div class="col">
+                        <label for="num_sens">number of sens:</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col">
+                        <input class="number form-control" type="number" id="num_proc" name="num_proc" value="8">
+                    </div>
+                    <div class="col">
+                        <input class="number form-control" type="number" id="num_sens" name="num_sens" value="8">
+                    </div>
+                </div>
+                <br>
+                <input class="btn btn-success" type="submit" value="Extract Data">
+            </div>
+        </form>
+    </div>
+<script src="../static/jscode.js"></script>
 </body>
 </html>
