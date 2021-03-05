@@ -11,6 +11,18 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
+labels = [
+    'JAN', 'FEB', 'MAR', 'APR',
+    'MAY', 'JUN', 'JUL', 'AUG',
+    'SEP', 'OCT', 'NOV', 'DEC'
+]
+
+values = [
+    967.67, 1190.89, 1079.75, 1349.19,
+    2328.91, 2504.28, 2873.83, 4764.87,
+    4349.29, 6458.30, 9907, 16297
+]
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -30,14 +42,31 @@ def submit():
             aa = file.read().decode("utf-8")
             f = StringIO(aa)
             data = sns.run(f, number_process, number_sensor)
-            return graphics(data)
+            return give_data(data)
         else:
             print("enter pickle")
             data = sns.decrypte_pck_obj(file.stream)
-            return graphics(data)
+            return render_template("graphics.html", np_array = data)
 
-def graphics(np_array):
-    render_template("grahics.html")
+def give_data(np_array):
+    days = []
+    for day in np_array[:, 0]:
+        day=day.split()
+        day = day[0:3]
+        s = ""
+        for i in day:
+            s += i+" "
+        if s != 'Data ' and s not in days:
+            days.append(s)
+    number_sensor = int((len(np_array[0])-3)/3)
+    return render_template("graphics.html", np_array=np_array, days=days, number_sensor=number_sensor, title="diocane")
+
+@app.route('/plot', methods = ['POST'])
+def line():
+    line_labels = labels
+    line_values = values
+    return render_template('lineChart.html', title='Bitcoin Monthly Price in USD', max=17000, labels=line_labels, values=line_values)
+
 
 if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True
