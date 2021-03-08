@@ -9,17 +9,16 @@
     <center>
     <h1>{{ title }}</h1>
 
-    <canvas id="chart" width="600" height="400"></canvas>
+    <canvas id="chart" width="1000" height="1200"></canvas>
     <script>
 
       // bar chart data
       var barData = {
         labels : [
           {% for item in labels %}
-            "{{ item }}",
+            "{{item}}",
           {% endfor %}
         ],
-
         datasets : [{
           fillColor: "rgba(151,187,205,0.2)",
           strokeColor: "rgba(151,187,205,1)",
@@ -44,20 +43,20 @@
       Chart.defaults.global.animationEasing = "easeOutBounce";
       Chart.defaults.global.responsive = false;
       Chart.defaults.global.scaleLineColor = "black";
-      Chart.defaults.global.scaleFontSize = 16;
+      Chart.defaults.global.scaleFontSize = 12;
 
       // get bar chart canvas
       var mychart = document.getElementById("chart").getContext("2d");
 
-      steps = 10
-      max = {{ max }}
+      steps = 110;
+      max = 140;
       // draw bar chart
       var LineChartDemo = new Chart(mychart).Line(barData, {
         scaleOverride: true,
         scaleSteps: steps,
-        scaleStepWidth: Math.ceil(max / steps),
-        scaleStartValue: 0,
-        scaleShowVerticalLines: true,
+        scaleStepWidth: 0.5,
+        scaleStartValue: 71,
+        scaleShowVerticalLines: false,
         scaleShowGridLines : true,
         barShowStroke : true,
         scaleShowLabels: true,

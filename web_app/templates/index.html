@@ -11,7 +11,7 @@
 </head>
 <body>
 
-    <div class="container">
+    <div id="gen" class="container">
         <br><br><br><br><br><br>
         <ul class="nav nav-pills nav-fill">
           <li class="nav-item">
@@ -19,7 +19,7 @@
           </li>
         </ul>
 
-        <form class ="form-group" action="/submit" method="POST" enctype="multipart/form-data">
+        <form id= "form-upload" class ="form-group" method="POST" enctype="multipart/form-data">
             <div class="form-group">
                 <div class="form-row">
                     <div class="col">
@@ -47,7 +47,10 @@
                     </div>
                 </div>
                 <br>
-                <input class="btn btn-success" type="submit" value="Extract Data">
+                <progress id="progressBar" value="0" max="100" style="width:100%;"></progress>
+                <h3 id="status"></h3>
+                <p id="loaded_n_total"></p>
+                <input class="btn btn-success" type="button" onclick="uploadFile()" value="Extract Data">
             </div>
         </form>
     </div>

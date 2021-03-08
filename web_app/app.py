@@ -1,6 +1,8 @@
 import os
+import sys
 from flask import Flask, render_template, request
 from io import StringIO
+import numpy as np
 from werkzeug.utils import secure_filename
 import scriptGetDataForWeb as sns
 
@@ -10,6 +12,9 @@ ALLOWED_EXTENSIONS = {'txt', 'log', ''}
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
+array = np.array([])
+nm_sens = 8
 
 labels = [
     'JAN', 'FEB', 'MAR', 'APR',
@@ -34,6 +39,8 @@ def submit():
         file = request.files['myfile']
         number_process = int(request.form['num_proc'])
         number_sensor = int(request.form['num_sens'])
+        global nm_sens
+        nm_sens = number_sensor
         if ".txt" in file.filename:
             print("enter txt")
             pass
@@ -42,30 +49,69 @@ def submit():
             aa = file.read().decode("utf-8")
             f = StringIO(aa)
             data = sns.run(f, number_process, number_sensor)
-            return give_data(data)
+            global array
+            array = data
+            return get_datatime(data)
         else:
             print("enter pickle")
             data = sns.decrypte_pck_obj(file.stream)
             return render_template("graphics.html", np_array = data)
 
-def give_data(np_array):
+
+def get_datatime(np_array):
     days = []
-    for day in np_array[:, 0]:
-        day=day.split()
-        day = day[0:3]
+    hours = []
+    for str in np_array[1:, 0]:
+        str=str.split()
+        day = str[0:3]
+        hour = str[3]
         s = ""
         for i in day:
             s += i+" "
         if s != 'Data ' and s not in days:
             days.append(s)
+        if hour not in hours:
+            hours.append(hour)
     number_sensor = int((len(np_array[0])-3)/3)
-    return render_template("graphics.html", np_array=np_array, days=days, number_sensor=number_sensor, title="diocane")
+    return render_template("graphics.html", np_array=np_array, days=days, hours=hours, number_sensor=number_sensor, title="diocane")
+
 
 @app.route('/plot', methods = ['POST'])
 def line():
     line_labels = labels
     line_values = values
     return render_template('lineChart.html', title='Bitcoin Monthly Price in USD', max=17000, labels=line_labels, values=line_values)
+
+
+@app.route('/plota', methods = ['POST'])
+def plotline():
+    data_from = request.form['data_da']
+    data_to = request.form['data_a']
+    risk = request.form['Risk']
+    signal = request.form['Signal']
+    volt = request.form['Volt']
+    hum = request.form['Temp']
+    temp = request.form['Hum%']
+    sensor = []
+    for i in range(1, nm_sens+1):
+        sensor.append(request.form['sens_'+str(i)])
+    data_every = request.form['data_sel']
+    media = request.form['media']
+    dt = []
+    db = []
+    i = 1
+    for id in array[1:,1]:
+        if data_from in array[i][0]:
+            dt.append(id)
+            ora = array[i][0].split()
+            db.append(ora[3])
+        i += 1
+
+    print("label: ",db)
+    print("value: ",dt)
+    line_labels = db
+    line_values = dt
+    return render_template('lineChart.html', title='first line chart', max=17000, labels=line_labels, values=line_values)
 
 
 if __name__ == '__main__':
