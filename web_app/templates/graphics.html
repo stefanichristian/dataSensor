@@ -37,7 +37,7 @@
     </script>
     <div class="container">
         <br><br><br><br>
-        <form action="/plota" method="POST">
+        <form action="/plota" method="POST" target="_blank">
             <div class="container">
                 <div class="row">
                     <div class="data">
@@ -72,15 +72,15 @@
                     <div class="type_data">
                         <div class="row" style="text-align:center; margin:auto; padding-top:30px; padding-left:40px;">
                             <div class="form-check">
-                                <input name="Risk" id="Risk" type="checkbox" checked>
+                                <input name="Risk" id="Risk" type="checkbox" >
                                 <label for="Risk">Risk</label>
                             </div>
                             <div class="form-check">
-                                <input name="Signal" id="Signal" type="checkbox" checked>
+                                <input name="Signal" id="Signal" type="checkbox" >
                                 <label for="Signal">Signal</label>
                             </div>
                             <div class="form-check">
-                                <input name="Volt" id="Volt" type="checkbox" checked>
+                                <input name="Volt" id="Volt" type="checkbox" >
                                 <label for="Volt">Voltage</label>
                             </div>
                         </div>
@@ -88,14 +88,14 @@
                             <div class="col" style="max-width:190px;">
                                 <div class="form-check">
                                     <div class="form-check">
-                                        <input name="Temp" id="Temp" type="checkbox" checked>
+                                        <input name="Temp" id="Temp" type="checkbox" >
                                         <label for="Temp">Temperature</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="col" style="max-width:150px;">
                                     <div class="form-check">
-                                        <input name="Hum%" id="Hum%" type="checkbox" checked>
+                                        <input name="Hum%" id="Hum%" type="checkbox" >
                                         <label for="Hum%">Humidity %</label>
                                     </div>
                             </div>
@@ -107,7 +107,7 @@
                         <h3 style="padding-left:20px;">Sensor:</h3>
                         {%for i in range(1,number_sensor+1)%}
                          <div class="form-check sens">
-                             <input name="sens_{{i}}" id="sens_{{i}}" type="checkbox" checked>
+                             <input name="sens_{{i}}" id="sens_{{i}}" type="checkbox" >
                              <label for="sens_{{i}}">{{i}}</label>
                          </div>
                         {%endfor%}
@@ -117,7 +117,6 @@
                     <div class="col">
                         <label for="data_sel">Data every:</label>
                         <select name="data_sel" id="data_sel" class="form-control">
-                            <option value="1_Sec">1 Sec</option>
                             <option value="1_min">1 Min</option>
                             <option value="5_min">5 Mins</option>
                             <option value="1_hour">1 Hour</option>

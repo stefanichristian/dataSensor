@@ -23,16 +23,12 @@ function uploadFile() {
   ajax.addEventListener("abort", abortHandler, false);
   ajax.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-        console.log("entered");
         document.getElementById("gen").innerHTML = this.responseText;
     }
   };
-
-  ajax.open("POST", "/submit");
+  ajax.open("POST", "/submit",true);
   ajax.send(formdata);
-  //ajax.success = function(response) { document.write(response) }
 }
-
 function progressHandler(event) {
   _("loaded_n_total").innerHTML = "Uploaded " + event.loaded + " bytes of " + event.total;
   var percent = (event.loaded / event.total) * 100;
