@@ -84,6 +84,14 @@ def get_data(arr, options, sensor):
             if options.get("volt") is not None:
                 which_data.append(id*3+3)
                 name_field.append("Volt_" + str(id + 1))
+    if options.get("temp") is not None:
+        which_data.append(nm_sens * 3 + 1)
+        name_field.append("Temp")
+        #print(arr[:,26])
+    if options.get("hum") is not None:
+        which_data.append(nm_sens * 3 + 2)
+        name_field.append("Hum%")
+
     first = True
     labels = []
     for i in which_data:

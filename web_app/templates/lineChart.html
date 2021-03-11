@@ -7,7 +7,9 @@
 </head>
 <body>
     <canvas id="myChart"></canvas>
+    <input type="button" onclick="saveImg()" value="Download PNG" hidden>
     <script>
+      var png = "";
       let myChart = document.getElementById('myChart').getContext('2d');
 
       let chartjs = new Chart(myChart, {
@@ -33,10 +35,7 @@
                 pointRadius: 0
             },
             {%endfor%}
-
-
-
-                ]
+            ]
         },
         options:{
                 showLines: true,
@@ -80,14 +79,24 @@
 				},
 				animation: {
                     onComplete: function() {
-                        var a = document.createElement('a');
-                         a.href = chartjs.toBase64Image();
-                         a.download = 'my_file_name.png';
-                         //a.click();
+                         png = chartjs.toBase64Image();
                     }
                 }
         }
       })
+
+      function saveImg() {
+        var a = document.createElement('a');
+        a.href = png
+        a.download = 'chart.png';
+        a.click();
+      }
+
+      // var a = document.createElement('a');
+        //                 a.id = "pngDw";
+          //               var assa = chartjs.toBase64Image();
+            //             a.download = 'chart.png';
+              //           a.click();
     </script>
 </body>
 </html>
