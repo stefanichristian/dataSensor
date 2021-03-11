@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>line chart</title>
-    <!--<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js'></script>-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
 </head>
 <body>
@@ -19,25 +18,29 @@
                     "{{item}}",
                 {%endfor%}
             ],
-            datasets:[{
-                label:'{{names}}',
+            datasets:[
+            {%for i in range(number_chart)%}
+            {
+                label:'{{names[i]}}',
                 fill: false,
-				backgroundColor: 'rgba(54,162,235,0.6)',
-				borderColor: 'rgba(54,162,235,0.6)',
+				backgroundColor: '{{color[i]}}',
+				borderColor: '{{color[i]}}',
                 data:[
-                    {%for item in values%}
+                    {%for item in values[i]%}
                         {{item}},
                     {%endfor%}
                 ],
                 pointRadius: 0
-            }]
+            },
+            {%endfor%}
+
+
+
+                ]
         },
-        option:{
+        options:{
+                showLines: true,
                 responsive: true,
-				title: {
-					display: true,
-					text: 'dioboia'
-				},
 				tooltips: {
 					mode: 'index',
 					intersect: false,
@@ -49,9 +52,14 @@
 				scales: {
 					xAxes: [{
 						display: true,
+						distribution : 'series',
 						scaleLabel: {
 							display: true,
 							labelString: 'Time'
+						},
+						ticks: {
+						    autoSkip: true,
+						    autoSkipPadding : 100
 						}
 					}],
 					yAxes: [{
@@ -65,11 +73,21 @@
 				element: {
 				    point:{
 				        radius: 0
+				    },
+				    line: {
+				        tension: 0
 				    }
-				}
+				},
+				animation: {
+                    onComplete: function() {
+                        var a = document.createElement('a');
+                         a.href = chartjs.toBase64Image();
+                         a.download = 'my_file_name.png';
+                         //a.click();
+                    }
+                }
         }
       })
-
     </script>
 </body>
 </html>
