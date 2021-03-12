@@ -29,6 +29,9 @@
         .sens{
             display:inline-block;
         }
+        .down {
+            float:right;
+        }
     </style>
     <div class="container">
         <br><br><br><br>
@@ -67,8 +70,8 @@
                     <div class="type_data">
                         <div class="row" style="text-align:center; margin:auto; padding-top:30px; padding-left:40px;">
                             <div class="form-check">
-                                <input name="Risk" id="Risk" type="checkbox" >
-                                <label for="Risk">Risk</label>
+                                <input name="Risc" id="Risc" type="checkbox" >
+                                <label for="Risc">Risc</label>
                             </div>
                             <div class="form-check">
                                 <input name="Signal" id="Signal" type="checkbox" >
@@ -112,11 +115,11 @@
                     <div class="col">
                         <label for="data_sel">Data every:</label>
                         <select name="data_sel" id="data_sel" class="form-control">
-                            <option value="1_min">1 Min</option>
-                            <option value="5_min">5 Mins</option>
-                            <option value="1_hour">1 Hour</option>
-                            <option value="5_hour">5 Hours</option>
-                            <option value="1_day">1 day</option>
+                            <option value="0">1 Min</option>
+                            <option value="1">5 Mins</option>
+                            <option value="2">1 Hour</option>
+                            <option value="3">5 Hours</option>
+                            <option value="4">1 day</option>
                         </select>
                         <br>
                         <div class="form-check" style="padding-left:0px;">
@@ -125,10 +128,16 @@
                         </div>
                     </div>
                 </div>
-                <input class="btn btn-success" type="submit" value="see graphs">
+                <input class="btn btn-success" type="submit" value="Create chart">
+                <a class="down" href="/download/array_pickle" target="_blank">
+                    <button class="btn btn-success" type="button">Download pickle</button>
+                </a>
+                <a class="down" href="/download/array_txt" target="_blank">
+                    <button class="btn btn-success" type="button">Download txt</button>
+                </a>
             </div>
         </form>
+
     </div>
-<script src="../static/jsgraphics.js"></script>
 </body>
 </html>

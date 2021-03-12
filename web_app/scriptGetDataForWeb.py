@@ -2,6 +2,11 @@ import concurrent.futures
 import numpy as np
 import time
 import pickle
+import sys
+from tqdm import *
+from tqdm._utils import _term_move_up
+path = 'file_uploaded/file.txt'
+
 
 days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 mouths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -15,9 +20,9 @@ def set_proc_data(np, file, number_process):
     ll = []
     for _ in range(np):
         ll.append("")
-    print("file size: " + str(filesz))
-    print("byte_min_proc: " + str(byte_for_proc))
-    print("expected number of process: "+str(number_process))
+    #print("file size: " + str(filesz))
+    #print("byte_min_proc: " + str(byte_for_proc))
+    #print("expected number of process: "+str(number_process))
     list_read_byte = data_for_proc_rec(byte_for_proc, np, file, 0, ll, filesz)
     return list_read_byte
 
@@ -131,48 +136,59 @@ def recovery_list(file, start_byte, number_sensor):
 
 
 def get_data(start, end, file, number_sens, id_process):
-    print("process created with id: "+str(id_process)+", read_byte from "+str(start)+" to "+str(end))
+    #print("process created with id: "+str(id_process)+", read_byte from "+str(start)+" to "+str(end))
     firsttime = True
     thereisdata = False
     file.seek(start, 0)
     seek = start
     list = []
-    while seek < end:
-        line = file.readline()
-        tp = type_line(line)
-        if tp == -1:
-            tp = is_broken_line(line)
-        if tp == 0:
-            first_byte_mis = int(file.tell())-len(line)
-            thereisdata = True
-            list = []
-            list.append(take_datatime(line))
-        elif tp == 1:
-            thereisdata = True
-            sens_data = line.split(":")
-            for id in range(3):
-                list.append(float(sens_data[id+1]))
-        elif tp == 2:
-            thereisdata = True
-            gen_data = line.split(":")
-            take = False
-            for w in gen_data:
-                if take:
-                    list.append(float(w))
-                    take = False
-                if "T" == w or "H" == w:
-                    take = True
-        else:
-            if thereisdata and len(list) != (number_sens*3)+3:
-                list = recovery_list(file, first_byte_mis, number_sens)
-            if thereisdata and firsttime:
-                thereisdata = False
-                array_data = np.array([list], dtype=str)
-                firsttime = False
-            elif thereisdata:
-                thereisdata = False
-                array_data = np.append(array_data, [list], axis=0)
-        seek = file.tell()
+    total_byte = end - start
+    txt = "PROCESS " + str(id_process)+ " "
+    wr = 0
+    bb = 0
+    with tqdm(total=total_byte, file=sys.stdout, position=0, leave=True, desc=txt) as pbar:
+        while seek < end:
+            wr = wr + 1
+            if wr > 7000:
+                pbar.update(bb)
+                wr = 0
+                bb = 0
+            line = file.readline()
+            bb = bb + len(line)
+            tp = type_line(line)
+            if tp == -1:
+                tp = is_broken_line(line)
+            if tp == 0:
+                first_byte_mis = int(file.tell())-len(line)
+                thereisdata = True
+                list = []
+                list.append(take_datatime(line))
+            elif tp == 1:
+                thereisdata = True
+                sens_data = line.split(":")
+                for id in range(3):
+                    list.append(float(sens_data[id+1]))
+            elif tp == 2:
+                thereisdata = True
+                gen_data = line.split(":")
+                take = False
+                for w in gen_data:
+                    if take:
+                        list.append(float(w))
+                        take = False
+                    if "T" == w or "H" == w:
+                        take = True
+            else:
+                if thereisdata and len(list) != (number_sens*3)+3:
+                    list = recovery_list(file, first_byte_mis, number_sens)
+                if thereisdata and firsttime:
+                    thereisdata = False
+                    array_data = np.array([list], dtype=str)
+                    firsttime = False
+                elif thereisdata:
+                    thereisdata = False
+                    array_data = np.append(array_data, [list], axis=0)
+            seek = file.tell()
     return array_data
 
 
@@ -195,13 +211,13 @@ def add_result(file, process, number_sensor):
 
 
 def create_table_txt(array,filename):
-    np.savetxt(filename, array, fmt='%s')
+    np.savetxt("file_uploaded/"+filename, array, fmt='%s')
     print("created a file that contains data named: "+str(filename))
     return True
 
 
 def create_pck_obj(array, filename):
-    outfile = open(filename, 'wb')
+    outfile = open("file_uploaded/"+filename, 'wb')
     pickle.dump(array, outfile)
     outfile.close()
     print("created a file pickle that contains data in a np array: " + str(filename))
@@ -212,6 +228,8 @@ def decrypte_pck_obj(infile):
     array = pickle.load(infile)
     infile.close()
     return array
+
+
 # data_sens = add_result()
 """
 print("Hello, which file do you want analyze?")
@@ -222,11 +240,14 @@ number_sensor = int(input("How many sensor do you have?\n") or "8")
 
 
 def run(file, process, number_sensor):
+    sys.stdout = open(path, 'w')
     start = time.perf_counter()
     data_sens = add_result(file, process, number_sensor)
     # data_sens = add_result("file_uploaded/aa.txt", 8, 8)
     finish = time.perf_counter()
     print(f'Finished in {round(finish-start,2)} second(s)')
+    sys.stdout.close()
+    sys.stdout = sys.__stdout__
     """
     choose = input("Digits \"1\" for create a file txt or \"2\" to save the np array as pickle file or \"Q\" to quit\n")
     if choose == "1":

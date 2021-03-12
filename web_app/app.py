@@ -1,11 +1,18 @@
 import os
+import glob
+from wsgiref.util import setup_testing_defaults
 import sys
-from flask import Flask, render_template, request
+import flask
+from flask import Flask, render_template, request ,send_file
 from io import StringIO
 import numpy as np
 import datetime
 from werkzeug.utils import secure_filename
 import scriptGetDataForWeb as sns
+import time
+
+from jinja2 import Environment
+from jinja2.loaders import FileSystemLoader
 
 UPLOAD_FOLDER = 'file_uploaded'
 ALLOWED_EXTENSIONS = {'txt', 'log', ''}
@@ -24,8 +31,41 @@ COLORS = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f',	'#00
 
 @app.route('/')
 def index():
+    #path = "/file_uploaded/"
+    #list = []
+    #for filename in sorted(glob.glob(os.path.join(path, '*'))):
+     #   with open(os.path.join(os.getcwd(), filename), 'r') as f:  # open in readonly mode
+     #       print("name: ", os.path.basename(f.name))
+      #      list.append(os.path.basename(f.name))
+    #if len(list) == 0:
+     #   hidden = True
     return render_template('index.html', title="Select your data")
 
+
+@app.route('/progress')
+def yy():
+    f=open("file_uploaded/file.txt", "r")
+    #print("ent")
+    aa=[]
+    for _ in range(nm_sens+1):
+        aa.append("")
+    line= f.readline()
+    while line:
+        try:
+            aa[int(line.split()[1])] = line
+        except Exception as e:
+            pass
+        line=f.readline()
+    f.close()
+    strr = ""
+    for a in aa:
+        strr = strr + a +"<br>"
+    return strr
+
+
+@app.route('/moreInfo')
+def indexs():
+    return render_template('popup.html', title="progression")
 
 @app.route('/submit', methods = ['POST'])
 def submit():
@@ -35,18 +75,21 @@ def submit():
         number_sensor = int(request.form['num_sens'])
         global nm_sens
         nm_sens = number_sensor
-        if ".txt" in file.filename:
-            pass
-        elif ".log" in file.filename:
-            aa = file.read().decode("utf-8")
-            f = StringIO(aa)
-            data = sns.run(f, number_process, number_sensor)
-            global array
-            array = data
-            return get_datatime(data)
+        if file.filename != '':
+            if ".txt" in file.filename:
+                pass
+            elif ".log" in file.filename:
+                aa = file.read().decode("utf-8")
+                f = StringIO(aa)
+                data = sns.run(f, number_process, number_sensor)
+                global array
+                array = data
+                return get_datatime(data)
+            else:
+                data = sns.decrypte_pck_obj(file.stream)
+                return get_datatime(data)
         else:
-            data = sns.decrypte_pck_obj(file.stream)
-            return get_datatime(data)
+            return render_template('index.html', title="Select your data")
 
 
 def get_datatime(np_array):
@@ -70,40 +113,60 @@ def get_datatime(np_array):
 def get_data(arr, options, sensor):
     date_from = datetime.datetime.strptime(options["data_from"], '%b %d %Y ') # !!IMPORTANT the data has one space at the end of the line
     date_to = datetime.datetime.strptime(options["data_to"], '%b %d %Y ')
+    data_every = int(options.get("data_every"))
+    evr = [1, 5, 60, 300, 1440]
+    media = options.get("media")
+    if media is not None:
+        nm = "_average"
+    else:
+        nm = ""
     values = []
     which_data = []
     name_field = []
     for id in range(len(sensor)):
         if sensor[id] is not None:
-            if options.get("risk") is not None:
+            if options.get("risc") is not None:
                 which_data.append(id*3+1)
-                name_field.append("Risk_"+str(id+1))
+                name_field.append("Risc_"+str(id+1)+nm)
             if options.get("signal") is not None:
                 which_data.append(id*3+2)
-                name_field.append("Signal_" + str(id + 1))
+                name_field.append("Signal_" + str(id + 1)+nm)
             if options.get("volt") is not None:
                 which_data.append(id*3+3)
-                name_field.append("Volt_" + str(id + 1))
+                name_field.append("Volt_" + str(id + 1)+nm)
     if options.get("temp") is not None:
         which_data.append(nm_sens * 3 + 1)
-        name_field.append("Temp")
-        #print(arr[:,26])
+        name_field.append("Temp"+nm)
     if options.get("hum") is not None:
         which_data.append(nm_sens * 3 + 2)
-        name_field.append("Hum%")
+        name_field.append("Hum%"+nm)
 
     first = True
     labels = []
     for i in which_data:
         tmp_values = []
         id = 1
+        take = 1
+        med = 0
         for data in arr[1:, i]:
-            current_date = datetime.datetime.strptime(arr[id][0], " %b %d %Y %H:%M:%S")
-            if date_from.date() <= current_date.date() <= date_to.date():
-                tmp_values.append(data)
-                if first:
-                    labels.append(current_date)
+            if media is not None and data != "NaN":
+                med = med + float(data)
+            if data == "NaN":
+                take = take - 1
+            else:
+                if take >= evr[data_every]:
+                    take = 0
+                    current_date = datetime.datetime.strptime(arr[id][0], " %b %d %Y %H:%M:%S")
+                    if date_from.date() <= current_date.date() <= date_to.date():
+                        if media is not None:
+                            tmp_values.append(float(med/evr[data_every]))
+                            med = 0
+                        else:
+                            tmp_values.append(data)
+                        if first:
+                            labels.append(current_date)
             id = id + 1
+            take = take + 1
         values.append(tmp_values)
         first = False
 
@@ -114,7 +177,7 @@ def get_data(arr, options, sensor):
 def plotline():
     data_from = request.form.get('data_da')
     data_to = request.form.get('data_a')
-    risk = request.form.get('Risk')
+    risc = request.form.get('Risc')
     signal = request.form.get('Signal')
     volt = request.form.get('Volt')
     temp = request.form.get('Temp')
@@ -127,10 +190,10 @@ def plotline():
     option = {
         "data_from": data_from,
         "data_to": data_to,
-        "risk": risk,
+        "risc": risc,
         "signal": signal,
         "volt": volt,
-        "temp":   temp,
+        "temp": temp,
         "hum": hum,
         "data_every": data_every,
         "media": media
@@ -140,6 +203,17 @@ def plotline():
     print("value len: ", len(dv))
     return render_template('lineChart.html', title='line chart', labels=dl, values=dv, names=names, color=COLORS, number_chart=len(dv))
 
+@app.route('/download/array_pickle', methods = ['GET', 'POST'])
+def down_pickle():
+    path = "file_uploaded/array_pickle"
+    sns.create_pck_obj(array, "array_pickle")
+    return send_file(path, as_attachment=True)
+
+@app.route('/download/array_txt', methods = ['GET', 'POST'])
+def down_txt():
+    path = "file_uploaded/data_txt.txt"
+    sns.create_table_txt(array, "data_txt.txt")
+    return send_file(path, as_attachment=True)
 
 if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True

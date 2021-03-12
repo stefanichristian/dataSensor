@@ -13,21 +13,29 @@ function _(el) {
 }
 
 function uploadFile() {
-  // alert(file.name+" | "+file.size+" | "+file.type);
-  var formdata = new FormData($('#form-upload')[0]);
-  //formdata.append("inputFile", file);
-  var ajax = new XMLHttpRequest();
-  ajax.upload.addEventListener("progress", progressHandler, false);
-  ajax.addEventListener("load", completeHandler, false);
-  ajax.addEventListener("error", errorHandler, false);
-  ajax.addEventListener("abort", abortHandler, false);
-  ajax.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-        document.getElementById("gen").innerHTML = this.responseText;
+    if(document.getElementById("inputFile").value == "") {
+        location.reload();
     }
-  };
-  ajax.open("POST", "/submit",true);
-  ajax.send(formdata);
+    else {
+          var newWindow = window.open('/moreInfo','More info','width=600,height=400')
+          // alert(file.name+" | "+file.size+" | "+file.type);
+          var formdata = new FormData($('#form-upload')[0]);
+          //formdata.append("inputFile", file);
+          var ajax = new XMLHttpRequest();
+          ajax.upload.addEventListener("progress", progressHandler, false);
+          ajax.addEventListener("load", completeHandler, false);
+          ajax.addEventListener("error", errorHandler, false);
+          ajax.addEventListener("abort", abortHandler, false);
+          ajax.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                newWindow.close();
+                document.getElementById("gen").innerHTML = this.responseText;
+            }
+          };
+          ajax.open("POST", "/submit",true);
+          ajax.send(formdata);
+    }
+
 }
 function progressHandler(event) {
   _("loaded_n_total").innerHTML = "Uploaded " + event.loaded + " bytes of " + event.total;

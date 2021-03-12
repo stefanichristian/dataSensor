@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>More Info</title>
+</head>
+<script>
+    function yourFunction(){
+        var ajax = new XMLHttpRequest();
+         ajax.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                //console.log(this.responseText)
+                document.getElementById("aa").innerHTML = this.responseText;
+            }
+          };
+       ajax.open("GET", "/progress",true);
+       ajax.send();
+
+       setTimeout(yourFunction, 3000);
+    }
+
+yourFunction();
+</script>
+<body id="aa">
+
+</body>
+
+</html>
