@@ -1,8 +1,4 @@
-import os
-import glob
-from wsgiref.util import setup_testing_defaults
 import sys
-import flask
 from flask import Flask, render_template, request ,send_file
 from io import StringIO
 import numpy as np
@@ -10,9 +6,6 @@ import datetime
 from werkzeug.utils import secure_filename
 import scriptGetDataForWeb as sns
 import time
-
-from jinja2 import Environment
-from jinja2.loaders import FileSystemLoader
 
 UPLOAD_FOLDER = 'file_uploaded'
 ALLOWED_EXTENSIONS = {'txt', 'log', ''}
@@ -31,35 +24,29 @@ COLORS = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f',	'#00
 
 @app.route('/')
 def index():
-    #path = "/file_uploaded/"
-    #list = []
-    #for filename in sorted(glob.glob(os.path.join(path, '*'))):
-     #   with open(os.path.join(os.getcwd(), filename), 'r') as f:  # open in readonly mode
-     #       print("name: ", os.path.basename(f.name))
-      #      list.append(os.path.basename(f.name))
-    #if len(list) == 0:
-     #   hidden = True
     return render_template('index.html', title="Select your data")
 
 
 @app.route('/progress')
 def yy():
-    f=open("file_uploaded/file.txt", "r")
-    #print("ent")
-    aa=[]
-    for _ in range(nm_sens+1):
-        aa.append("")
-    line= f.readline()
-    while line:
-        try:
-            aa[int(line.split()[1])] = line
-        except Exception as e:
-            pass
-        line=f.readline()
-    f.close()
-    strr = ""
-    for a in aa:
-        strr = strr + a +"<br>"
+    try:
+        f=open(sns.file_log, "r")
+        aa=[]
+        for _ in range(nm_sens+1):
+            aa.append("")
+        line= f.readline()
+        while line:
+            try:
+                aa[int(line.split()[1])] = line
+            except Exception as e:
+                pass
+            line=f.readline()
+        f.close()
+        strr = ""
+        for a in aa:
+            strr = strr + a +"<br>"
+    except:
+        strr = ""
     return strr
 
 
@@ -77,12 +64,20 @@ def submit():
         nm_sens = number_sensor
         if file.filename != '':
             if ".txt" in file.filename:
-                pass
+                aa = file.read().decode("utf-8")
+                f = StringIO(aa)
+                data = sns.run(f, number_process, number_sensor, "txt")
+                if data is None:
+                    return "Wrong format file, please reload page"
+                global array
+                array = data
+                return get_datatime(data)
             elif ".log" in file.filename:
                 aa = file.read().decode("utf-8")
                 f = StringIO(aa)
-                data = sns.run(f, number_process, number_sensor)
-                global array
+                data = sns.run(f, number_process, number_sensor, "log")
+                if data is None:
+                    return "Wrong format file, please reload page"
                 array = data
                 return get_datatime(data)
             else:
@@ -156,7 +151,14 @@ def get_data(arr, options, sensor):
             else:
                 if take >= evr[data_every]:
                     take = 0
-                    current_date = datetime.datetime.strptime(arr[id][0], " %b %d %Y %H:%M:%S")
+                    #print(array[:,0])
+                    try:
+                        current_date = datetime.datetime.strptime(arr[id][0], " %b %d %Y %H:%M:%S")
+                    except:
+                        try:
+                            current_date = datetime.datetime.strptime(arr[id][0], "%b %d %Y %H:%M:%S")
+                        except Exception as e:
+                            print(e)
                     if date_from.date() <= current_date.date() <= date_to.date():
                         if media is not None:
                             tmp_values.append(float(med/evr[data_every]))
@@ -169,7 +171,6 @@ def get_data(arr, options, sensor):
             take = take + 1
         values.append(tmp_values)
         first = False
-
     return name_field, values, labels
 
 

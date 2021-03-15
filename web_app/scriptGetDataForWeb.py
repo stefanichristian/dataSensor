@@ -4,8 +4,10 @@ import time
 import pickle
 import sys
 from tqdm import *
-from tqdm._utils import _term_move_up
-path = 'file_uploaded/file.txt'
+import random
+import os
+path = 'file_uploaded/file_'
+file_log = ""
 
 
 days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -13,7 +15,7 @@ mouths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
 id_process = 1 #id of start process
 
 
-def set_proc_data(np, file, number_process):
+def set_proc_data(np, file, number_process, type_file):
     file.seek(0, 2)
     filesz = file.tell()
     byte_for_proc = int(filesz / np)
@@ -23,11 +25,11 @@ def set_proc_data(np, file, number_process):
     #print("file size: " + str(filesz))
     #print("byte_min_proc: " + str(byte_for_proc))
     #print("expected number of process: "+str(number_process))
-    list_read_byte = data_for_proc_rec(byte_for_proc, np, file, 0, ll, filesz)
+    list_read_byte = data_for_proc_rec(byte_for_proc, np, file, 0, ll, filesz, type_file)
     return list_read_byte
 
 
-def data_for_proc_rec(byte, num_p, file, id_proc, list, filesz):
+def data_for_proc_rec(byte, num_p, file, id_proc, list, filesz , type_file):
     if id_proc == 0:
         file.seek(byte, 0)
         if id_proc == num_p-1:    #exception for just one process
@@ -38,18 +40,23 @@ def data_for_proc_rec(byte, num_p, file, id_proc, list, filesz):
         return list
     else:
         file.seek(int(list[id_proc-1])+int(byte), 0)
-    #print("for_p: " + str(file.tell()))
     ex = False
     line = "asd"
     while not ex and line:
         line = file.readline()
         #print("line: "+line)
         for word in line.split():
-            if word in days:
-                #print("w at: " + str(file.tell() - len(line)))
-                list[id_proc] = file.tell() - len(line)
-                ex = True
-    return data_for_proc_rec(byte, num_p, file, id_proc + 1, list, filesz)
+            if type_file == "log":
+                if word in days:
+                    #print("w at: " + str(file.tell() - len(line)))
+                    list[id_proc] = file.tell() - len(line)
+                    ex = True
+            elif type_file == "txt":
+                if word in mouths:
+                    # print("w at: " + str(file.tell() - len(line)))
+                    list[id_proc] = file.tell() - len(line)
+                    ex = True
+    return data_for_proc_rec(byte, num_p, file, id_proc + 1, list, filesz, type_file)
 
 def create_np_array(number_sens):
     x = np.array([["Data"]])
@@ -149,7 +156,7 @@ def get_data(start, end, file, number_sens, id_process):
     with tqdm(total=total_byte, file=sys.stdout, position=0, leave=True, desc=txt) as pbar:
         while seek < end:
             wr = wr + 1
-            if wr > 7000:
+            if wr > 5000:
                 pbar.update(bb)
                 wr = 0
                 bb = 0
@@ -192,11 +199,51 @@ def get_data(start, end, file, number_sens, id_process):
     return array_data
 
 
-def add_result(file, process, number_sensor):
-    ll = set_proc_data(process, file, process)
-    ll.insert(0,0)
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        results = [executor.submit(get_data, ll[i-1], ll[i], file, number_sensor,i) for i in range(1, len(ll))]
+def get_data_txt(file, seek, end, id_process):
+    file.seek(seek, 0)
+    seek_tmp = file.tell()
+    if id_process == 1:
+        line = file.readline()
+    line = file.readline()
+    ll = []
+    first = True
+    total_byte = end - seek
+    txt = "PROCESS " + str(id_process) + " "
+    wr = 0
+    bb = 0
+    with tqdm(total=total_byte, file=sys.stdout, position=0, leave=True, desc=txt) as pbar:
+        while line and int(seek_tmp) <= end:
+            wr = wr + 1
+            if wr > 50:
+                pbar.update(bb)
+                wr = 0
+                bb = 0
+            bb = bb + len(line)
+            line = line.split()
+            ll.append(line[0]+" "+line[1]+" "+line[2]+" "+line[3])
+            for id in range(4, len(line)):
+                ll.append(line[id])
+            if first:
+                m = np.array([ll])
+                first = False
+            else:
+                m = np.append(m, [ll], axis=0)
+            ll = []
+            line = file.readline()
+            seek_tmp = file.tell()
+    return m
+
+
+def add_result(file, process, number_sensor, type_file):
+    ll = set_proc_data(process, file, process, type_file)
+    ll.insert(0, 0)
+    if type_file == "log":
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = [executor.submit(get_data, ll[i-1], ll[i], file, number_sensor,i) for i in range(1, len(ll))]
+
+    elif type_file == "txt":
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = [executor.submit(get_data_txt, file, ll[i - 1], ll[i], i) for i in range(1, len(ll))]
 
     array = create_np_array(number_sensor)
     ff = True
@@ -230,23 +277,22 @@ def decrypte_pck_obj(infile):
     return array
 
 
-# data_sens = add_result()
-"""
-print("Hello, which file do you want analyze?")
-pathname = input("Write name with extension ex-> data.log\n") or "aa.txt"
-process = int(input("How many process do you want create?\n") or "8")
-number_sensor = int(input("How many sensor do you have?\n") or "8")
-"""
-
-
-def run(file, process, number_sensor):
-    sys.stdout = open(path, 'w')
-    start = time.perf_counter()
-    data_sens = add_result(file, process, number_sensor)
-    # data_sens = add_result("file_uploaded/aa.txt", 8, 8)
-    finish = time.perf_counter()
-    print(f'Finished in {round(finish-start,2)} second(s)')
+def run(file, process, number_sensor, type_file):
+    rn = random.randint(1, 10000)
+    pathh = path+str(rn)+".txt"
+    global file_log
+    file_log = pathh
+    sys.stdout = open(pathh, 'w')
+    try:
+        start = time.perf_counter()
+        data_sens = add_result(file, process, number_sensor, type_file)
+        finish = time.perf_counter()
+        print(f'Finished in {round(finish-start,2)} second(s)')
+    except Exception as e:
+        print(e)
+        data_sens = None
     sys.stdout.close()
+    os.remove(pathh)
     sys.stdout = sys.__stdout__
     """
     choose = input("Digits \"1\" for create a file txt or \"2\" to save the np array as pickle file or \"Q\" to quit\n")
