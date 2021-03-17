@@ -156,7 +156,7 @@ def get_data(start, end, file, number_sens, id_process):
     with tqdm(total=total_byte, file=sys.stdout, position=0, leave=True, desc=txt) as pbar:
         while seek < end:
             wr = wr + 1
-            if wr > 5000:
+            if wr > 1000:
                 pbar.update(bb)
                 wr = 0
                 bb = 0
@@ -219,9 +219,9 @@ def get_data_txt(file, seek, end, id_process):
                 wr = 0
                 bb = 0
             bb = bb + len(line)
-            line = line.split()
-            ll.append(line[0]+" "+line[1]+" "+line[2]+" "+line[3])
-            for id in range(4, len(line)):
+            line = line.split('\t')
+            #ll.append(line[0]+" "+line[1]+" "+line[2]+" "+line[3])
+            for id in range(0, len(line)):
                 ll.append(line[id])
             if first:
                 m = np.array([ll])
@@ -245,20 +245,23 @@ def add_result(file, process, number_sensor, type_file):
         with concurrent.futures.ProcessPoolExecutor() as executor:
             results = [executor.submit(get_data_txt, file, ll[i - 1], ll[i], i) for i in range(1, len(ll))]
 
-    array = create_np_array(number_sensor)
-    ff = True
-    if concurrent.futures.ALL_COMPLETED:
-        for id in range(process):
-            if ff:
-                array = np.append([array], results[id].result(), axis=0)
-                ff = False
-            else:
-                array = np.append(array, results[id].result(), axis=0)
+    with tqdm(total=(process*10)+10, file=sys.stdout, position=0, leave=True, desc="COSTRUCTION ARRAY") as pbar:
+        array = create_np_array(number_sensor)
+        pbar.update(10)
+        ff = True
+        if concurrent.futures.ALL_COMPLETED:
+            for id in range(process):
+                if ff:
+                    array = np.append([array], results[id].result(), axis=0)
+                    ff = False
+                else:
+                    array = np.append(array, results[id].result(), axis=0)
+                pbar.update(10)
     return array
 
 
 def create_table_txt(array,filename):
-    np.savetxt("file_uploaded/"+filename, array, fmt='%s')
+    np.savetxt("file_uploaded/"+filename, array, fmt='%s', delimiter='\t')
     print("created a file that contains data named: "+str(filename))
     return True
 
@@ -291,16 +294,9 @@ def run(file, process, number_sensor, type_file):
     except Exception as e:
         print(e)
         data_sens = None
+
     sys.stdout.close()
     os.remove(pathh)
     sys.stdout = sys.__stdout__
-    """
-    choose = input("Digits \"1\" for create a file txt or \"2\" to save the np array as pickle file or \"Q\" to quit\n")
-    if choose == "1":
-        name = input("Name file?\n") or "datisensori.txt"
-        create_table_txt(data_sens, name)
-    if choose == "2":
-        name = input("Name file?\n") or "datisensori"
-        create_pck_obj(data_sens, name)
-    """
+
     return data_sens

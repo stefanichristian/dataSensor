@@ -1,11 +1,10 @@
-import sys
-from flask import Flask, render_template, request ,send_file
+from flask import Flask, render_template, request , send_file
 from io import StringIO
 import numpy as np
 import datetime
-from werkzeug.utils import secure_filename
 import scriptGetDataForWeb as sns
-import time
+import random
+from matplotlib.dates import strpdate2num
 
 UPLOAD_FOLDER = 'file_uploaded'
 ALLOWED_EXTENSIONS = {'txt', 'log', ''}
@@ -14,8 +13,8 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-LOADED = False
-
+FILE_LOG_SEEK = 0
+nm_process = 8
 
 array = np.array([])
 nm_sens = 8
@@ -30,23 +29,36 @@ def index():
 @app.route('/progress')
 def yy():
     try:
+        #global FILE_LOG_SEEK
         f=open(sns.file_log, "r")
+        #f.seek(FILE_LOG_SEEK, 0)
         aa=[]
-        for _ in range(nm_sens+1):
+        for _ in range(nm_process+2):
             aa.append("")
         line= f.readline()
         while line:
+            spl = line.split()
             try:
-                aa[int(line.split()[1])] = line
+                if spl[0] == "COSTRUCTION":
+                    aa[nm_process+1] = line
+                elif spl[0] == "PROCESS":
+                    aa[int(spl[1])] = line
             except Exception as e:
+                #print("enter first ex")
+                #print ("l:", line, file=sys.stderr)
+                #if (line.split()[0] == "COSTRUCTION"):
+                 #   aa[nm_sens+1] = line
+                #else:
                 pass
-            line=f.readline()
+            line = f.readline()
+        #FILE_LOG_SEEK = int(f.tell()) - len(line)
         f.close()
         strr = ""
         for a in aa:
             strr = strr + a +"<br>"
     except:
-        strr = ""
+        #print("second exc")
+        strr = "wait few minutes, the server is loading the datas"
     return strr
 
 
@@ -54,11 +66,14 @@ def yy():
 def indexs():
     return render_template('popup.html', title="progression")
 
+
 @app.route('/submit', methods = ['POST'])
 def submit():
     if request.method == 'POST':
         file = request.files['myfile']
         number_process = int(request.form['num_proc'])
+        global nm_process
+        nm_process = number_process
         number_sensor = int(request.form['num_sens'])
         global nm_sens
         nm_sens = number_sensor
@@ -66,12 +81,14 @@ def submit():
             if ".txt" in file.filename:
                 aa = file.read().decode("utf-8")
                 f = StringIO(aa)
-                data = sns.run(f, number_process, number_sensor, "txt")
+                #data = sns.run(f, number_process, number_sensor, "txt")
+                #data = np.loadtxt(f, delimiter='\t', dtype="str")
+                data = np.genfromtxt(f, delimiter='\t', dtype="str", autostrip=True)
                 if data is None:
                     return "Wrong format file, please reload page"
                 global array
                 array = data
-                return get_datatime(data)
+                return get_datatime()
             elif ".log" in file.filename:
                 aa = file.read().decode("utf-8")
                 f = StringIO(aa)
@@ -79,30 +96,31 @@ def submit():
                 if data is None:
                     return "Wrong format file, please reload page"
                 array = data
-                return get_datatime(data)
+                return get_datatime()
             else:
                 data = sns.decrypte_pck_obj(file.stream)
-                return get_datatime(data)
+                array = data
+                return get_datatime()
         else:
             return render_template('index.html', title="Select your data")
 
 
-def get_datatime(np_array):
+def get_datatime():
     days = []
     hours = []
-    for str in np_array[1:, 0]:
+    for str in array[1:, 0]:
         str=str.split()
         day = str[0:3]
-        hour = str[3]
+        #hour = str[3]
         s = ""
         for i in day:
             s += i+" "
         if s != 'Data ' and s not in days:
             days.append(s)
-        if hour not in hours:
-            hours.append(hour)
-    number_sensor = int((len(np_array[0])-3)/3)
-    return render_template("graphics.html", np_array=np_array, days=days, hours=hours, number_sensor=number_sensor, color=COLORS, title="Create your chart")
+        #if hour not in hours:
+         #   hours.append(hour)
+    number_sensor = int((len(array[0])-3)/3)
+    return render_template("graphics.html", days=days, hours=hours, number_sensor=number_sensor, color=COLORS, title="Create your chart")
 
 
 def get_data(arr, options, sensor):
@@ -145,7 +163,7 @@ def get_data(arr, options, sensor):
         med = 0
         for data in arr[1:, i]:
             if media is not None and data != "NaN":
-                med = med + float(data)
+                med = med + round(float(data),1)
             if data == "NaN":
                 take = take - 1
             else:
@@ -161,7 +179,7 @@ def get_data(arr, options, sensor):
                             print(e)
                     if date_from.date() <= current_date.date() <= date_to.date():
                         if media is not None:
-                            tmp_values.append(float(med/evr[data_every]))
+                            tmp_values.append(round(float(med/evr[data_every]),1))
                             med = 0
                         else:
                             tmp_values.append(data)
@@ -174,7 +192,11 @@ def get_data(arr, options, sensor):
     return name_field, values, labels
 
 
-@app.route('/plota', methods = ['POST'])
+def gen_color():
+    COLORS.append("#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)]))
+    return True
+
+@app.route('/chart', methods=['POST'])
 def plotline():
     data_from = request.form.get('data_da')
     data_to = request.form.get('data_a')
@@ -202,6 +224,9 @@ def plotline():
     names, dv, dl = get_data(array, option, sensor)
     print("label len: ", len(dl))
     print("value len: ", len(dv))
+    random.shuffle(COLORS)
+    while len(dv) > len(COLORS):
+        gen_color()
     return render_template('lineChart.html', title='line chart', labels=dl, values=dv, names=names, color=COLORS, number_chart=len(dv))
 
 @app.route('/download/array_pickle', methods = ['GET', 'POST'])
