@@ -38,6 +38,7 @@ You can process this following type of files:
 
 Log file
 > Log file must be in the format of appa
+> (https://github.com/stefanichristian/dataSensor/blob/master/img_readme/appa.png)
 
 Txt file
 > Txt file must be in the format according with Dott. Andrea Gaiardo
