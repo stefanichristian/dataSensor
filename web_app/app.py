@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request , send_file
+from flask import Flask, render_template, request, send_file
 from io import StringIO
 import numpy as np
 import datetime
 import scriptGetDataForWeb as sns
 import random
-from matplotlib.dates import strpdate2num
+
 
 UPLOAD_FOLDER = 'file_uploaded'
 ALLOWED_EXTENSIONS = {'txt', 'log', ''}
