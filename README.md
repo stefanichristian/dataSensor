@@ -19,6 +19,7 @@ Then setup the enviroment installing with Python 3.8.8 or latest versions, and a
 - Flask
 - Numpy
 ## Dipendenze
+On linux ubunti 20.04 or latest version works 100%, for windows should works but not sure 100%.
 ## How to install
 Clone the repository in conda enviroment, what you need you find in web_app folder.
 
