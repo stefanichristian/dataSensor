@@ -18,6 +18,8 @@ You need to install a conda enviroment -> https://conda.io/projects/conda/en/lat
 Then setup the enviroment installing with Python 3.8.8 or latest versions, and also install the following packeges:
 - Flask
 - Numpy
+- Tqdm
+(Using command : conda install)
 ## Dipendenze
 On linux ubunti 20.04 or latest version works 100%, for windows should works but not sure 100%.
 ## How to install
@@ -26,6 +28,10 @@ Clone the repository in conda enviroment, what you need you find in web_app fold
 ```git
 git clone https://github.com/stefanichristian/dataSensor.git
 ```
+Then you can run with python /dataSensor/web_app/app.py
+or entering in the folder web_app and run python app.py
+
+The server should start on port 5000
 
 ## Documentazione
 ### Link a documentazione esterna 
