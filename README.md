@@ -2,7 +2,7 @@
 
 # Web server
 
-> You can use this web server to elaborate data from gas sensors, particularly appa data. This project allow you to convert file "log" or "txt" into a performers structure that contain entire dataset.
+> You can use this web server to elaborate data from gas sensors, particularly appa data. This project allow you to convert files "log" or "txt" into a powerful structure that contains entire dataset.
 > You can choose to return pickle object, compress txt file or hdmf5 object.
 > Also you can create line chart, useful to take a fast look on the datas.
 
