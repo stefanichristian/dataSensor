@@ -14,14 +14,14 @@
 - [Licenza](#licenza)
 
 # How to start
-You need to install a conda enviroment -> https://conda.io/projects/conda/en/latest/user-guide/install/index.html.
-Then setup the enviroment installing with Python 3.8.8 or latest versions, and also install the following packeges:
+You need to install a conda environment -> https://conda.io/projects/conda/en/latest/user-guide/install/index.html.
+Then set up the environment installing with Python 3.8.8 or latest versions, and also install the following packages:
 - Flask
 - Numpy
 ## Dipendenze
-On linux ubunti 20.04 or latest version works 100%, for windows should works but not sure 100%.
+On linux ubuntu 20.04 or latest version works 100%, for windows should works but not sure 100%.
 ## How to install
-Clone the repository in conda enviroment, what you need you find in web_app folder.
+Clone the repository in conda environment, what you need you find in web_app folder.
 
 ```git
 git clone https://github.com/stefanichristian/dataSensor.git
