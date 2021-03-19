@@ -68,7 +68,7 @@ def create_np_array(number_sens):
 
 def type_line(line):
     word = line[0:3]
-    if word == '':
+    if len(line) == 1:
         return -1
     elif word in days:
         return 0
@@ -81,7 +81,7 @@ def type_line(line):
 
 
 def is_broken_line(line):
-    if line == '':
+    if len(line) == 1:
         return -1
     for word in line.split():
         if word in days:
@@ -90,9 +90,7 @@ def is_broken_line(line):
             return 1
         elif word[0] == 'T' and word[1] == ':':
             return 2
-        else:
-            return -1
-    return -1                                       #non itera se la riga è vuota, ma il primo if non funziona boh
+    return -2                                       #non itera se la riga è vuota, ma il primo if non funziona boh
 
 
 def take_datatime(line):
@@ -137,7 +135,7 @@ def recovery_list(file, start_byte, number_sensor):
                 if "T" == w or "H" == w:
                     take = True
             exit = True
-        elif tp == -1:               #end of file or end data
+        elif tp == -1:
             exit = True
     return supp_list
 
@@ -146,6 +144,7 @@ def get_data(start, end, file, number_sens, id_process):
     #print("process created with id: "+str(id_process)+", read_byte from "+str(start)+" to "+str(end))
     firsttime = True
     thereisdata = False
+    there_is_corrupt_data = False
     file.seek(start, 0)
     seek = start
     list = []
@@ -167,6 +166,7 @@ def get_data(start, end, file, number_sens, id_process):
                 tp = is_broken_line(line)
             if tp == 0:
                 first_byte_mis = int(file.tell())-len(line)
+                there_is_corrupt_data = False
                 thereisdata = True
                 list = []
                 list.append(take_datatime(line))
@@ -185,16 +185,20 @@ def get_data(start, end, file, number_sens, id_process):
                         take = False
                     if "T" == w or "H" == w:
                         take = True
+            elif tp == -2:
+                there_is_corrupt_data = True
             else:
-                if thereisdata and len(list) != (number_sens*3)+3:
-                    list = recovery_list(file, first_byte_mis, number_sens)
-                if thereisdata and firsttime:
-                    thereisdata = False
-                    array_data = np.array([list], dtype=str)
-                    firsttime = False
-                elif thereisdata:
-                    thereisdata = False
-                    array_data = np.append(array_data, [list], axis=0)
+                if not there_is_corrupt_data:
+                    if thereisdata and len(list) != (number_sens*3)+3:
+                        list = recovery_list(file, first_byte_mis, number_sens)
+                        first_byte_mis = int(file.tell())
+                    if thereisdata and firsttime:
+                        thereisdata = False
+                        array_data = np.array([list], dtype=str)
+                        firsttime = False
+                    elif thereisdata:
+                        thereisdata = False
+                        array_data = np.append(array_data, [list], axis=0)
             seek = file.tell()
     return array_data
 

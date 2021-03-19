@@ -123,8 +123,7 @@ def get_datatime():
 
 
 def get_data(arr, options, sensor):
-    date_from = datetime.datetime.strptime(options["data_from"],
-                                           '%b %d %Y ')  # !!IMPORTANT the data has one space at the end of the line
+    date_from = datetime.datetime.strptime(options["data_from"], '%b %d %Y ')  # !!IMPORTANT the data has one space at the end of the line
     date_to = datetime.datetime.strptime(options["data_to"], '%b %d %Y ')
     data_every = int(options.get("data_every"))
     evr = [1, 5, 60, 300, 1440]
