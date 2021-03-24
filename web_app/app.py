@@ -27,9 +27,7 @@ def index():
 @app.route('/progress')
 def yy():
     try:
-        # global FILE_LOG_SEEK
         f = open(sns.file_log, "r")
-        # f.seek(FILE_LOG_SEEK, 0)
         aa = []
         for _ in range(nm_process + 2):
             aa.append("")
@@ -42,14 +40,8 @@ def yy():
                 elif spl[0] == "PROCESS":
                     aa[int(spl[1])] = line
             except Exception as e:
-                # print("enter first ex")
-                # print ("l:", line, file=sys.stderr)
-                # if (line.split()[0] == "COSTRUCTION"):
-                #   aa[nm_sens+1] = line
-                # else:
                 pass
             line = f.readline()
-        # FILE_LOG_SEEK = int(f.tell()) - len(line)
         f.close()
         strr = ""
         for a in aa:
