@@ -88,7 +88,13 @@ def submit():
                 array = data
                 return get_datatime()
             else:
-                data = sns.decrypte_pck_obj(file.stream)
+                try:
+                    data = sns.decrypte_pck_obj(file.stream)
+                except Exception as e:
+                    print(e)
+                    data = None
+                if data is None:
+                    return "Wrong format file, please reload page"
                 array = data
                 return get_datatime()
         else:
