@@ -103,7 +103,7 @@ def take_datatime(line):
             save = False
         if save:
             str += " "+word
-    return str
+    return str.strip()
 
 
 def recovery_list(file, start_byte, number_sensor):
@@ -118,7 +118,7 @@ def recovery_list(file, start_byte, number_sensor):
         if tp == -1:
             tp = is_broken_line(line)
         if tp == 0:
-            supp_list[0]= take_datatime(line)
+            supp_list[0] = take_datatime(line)
         elif tp == 1:
             sens_data = line.split(":")
             for id in range(3):
@@ -224,7 +224,6 @@ def get_data_txt(file, seek, end, id_process):
                 bb = 0
             bb = bb + len(line)
             line = line.split('\t')
-            #ll.append(line[0]+" "+line[1]+" "+line[2]+" "+line[3])
             for id in range(0, len(line)):
                 ll.append(line[id])
             if first:

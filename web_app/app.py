@@ -167,13 +167,13 @@ def get_data(arr, options, sensor):
                 if take >= evr[data_every]:
                     take = 0
                     # print(array[:,0])
-                    try:
-                        current_date = datetime.datetime.strptime(arr[id][0], " %b %d %Y %H:%M:%S")
-                    except:
-                        try:
-                            current_date = datetime.datetime.strptime(arr[id][0], "%b %d %Y %H:%M:%S")
-                        except Exception as e:
-                            print(e)
+                    #try:
+                     #   current_date = datetime.datetime.strptime(arr[id][0], " %b %d %Y %H:%M:%S")
+                    #except:
+                    #try:
+                    current_date = datetime.datetime.strptime(arr[id][0], "%b %d %Y %H:%M:%S")
+                    #except Exception as e:
+                     #   print(e)
                     if date_from.date() <= current_date.date() <= date_to.date():
                         if media is not None:
                             tmp_values.append(round(float(med / evr[data_every]), 1))
@@ -207,6 +207,7 @@ def plotline():
     for i in range(1, nm_sens + 1):
         sensor.append(request.form.get('sens_' + str(i)))
     data_every = request.form.get('data_sel')
+    yscale = request.form.get('yscale')
     media = request.form.get('media')
     option = {
         "data_from": data_from,
@@ -225,8 +226,9 @@ def plotline():
     random.shuffle(COLORS)
     while len(dv) > len(COLORS):
         gen_color()
+    print("yscale:",yscale)
     return render_template('lineChart.html', title='line chart', labels=dl, values=dv, names=names, color=COLORS,
-                           number_chart=len(dv))
+                           number_chart=len(dv),yscale=yscale)
 
 
 @app.route('/download/array_pickle', methods=['GET', 'POST'])
