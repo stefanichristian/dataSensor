@@ -6,7 +6,7 @@ import sys
 from tqdm import *
 import random
 import os
-path = 'file_uploaded/file_'
+path = 'tmp/file_'
 file_log = ""
 
 
