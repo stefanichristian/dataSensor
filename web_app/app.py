@@ -48,7 +48,7 @@ def yy():
             strr = strr + a + "<br>"
     except:
         # print("second exc")
-        strr = "wait few minutes, the server is loading the datas"
+        strr = "wait few minutes, the server is loading the data"
     return strr
 
 
@@ -65,10 +65,11 @@ def submit():
         global nm_process
         nm_process = number_process
         number_sensor = int(request.form['num_sens'])
+        type_f = request.form.get('type_f')
         global nm_sens
         nm_sens = number_sensor
         if file.filename != '':
-            if ".txt" in file.filename:
+            if type_f == "txt":
                 aa = file.read().decode("utf-8")
                 f = StringIO(aa)
                 # data = sns.run(f, number_process, number_sensor, "txt")
@@ -79,7 +80,7 @@ def submit():
                 global array
                 array = data
                 return get_datatime()
-            elif ".log" in file.filename:
+            elif type_f == "log":
                 aa = file.read().decode("utf-8")
                 f = StringIO(aa)
                 data = sns.run(f, number_process, number_sensor, "log")
@@ -87,7 +88,7 @@ def submit():
                     return "Wrong format file, please reload page"
                 array = data
                 return get_datatime()
-            else:
+            elif type_f == "pickle":
                 try:
                     data = sns.decrypte_pck_obj(file.stream)
                 except Exception as e:

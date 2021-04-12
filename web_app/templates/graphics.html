@@ -44,7 +44,7 @@
                         <div class="form-row">
                             <div class="col">
                                 <label for="data_da">From</label>
-                                <select id="data_da"name="data_da" class="form-control">
+                                <select id="data_da" name="data_da" class="form-control">
                                 {%for day in days%}
                                     <option value="{{day}}">{{day}}</option>
                                 {%endfor%}
@@ -113,7 +113,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col" style="max-width:20%">
+                    <div class="col" style="max-width:25%">
                         <label for="data_sel">Data every:</label>
                         <select name="data_sel" id="data_sel" class="form-control">
                             <option value="0">1 Min</option>
@@ -128,7 +128,7 @@
                             <input name="media" id="media" type="checkbox">
                         </div>
                     </div>
-                    <div class="col">
+                    <div class="col" style="max-width:25%">
                         <label for="yscale">Data every:</label>
                         <select name="yscale" id="yscale" class="form-control">
                             <option value="linear">Linear</option>

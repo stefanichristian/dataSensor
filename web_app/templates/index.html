@@ -10,14 +10,6 @@
 
 </head>
 <body>
-    <script>
-       // window.onload() {
-         //   if({{LOADED}}) {
-
-           // }
-       // }
-    </script>
-
     <div id="gen" class="container">
         <br><br><br><br><br><br>
         <ul class="nav nav-pills nav-fill">
@@ -35,7 +27,14 @@
                         <span id="file-chosen">  No file chosen</span><br>
                         <small id="emailHelp" class="form-text text-muted">If you are uploading a pickle file, is not necessary insert number of process and sensor!</small>
                     </div>
-
+                    <div class="col"style="max-width:25%;">
+                        <label for="type_f">Type:</label>
+                        <select id="type_f" name="type_f" class="form-control">
+                            <option value="log">ssd</option>
+                            <option value="txt">txt</option>
+                            <option value="pickle">pickle</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="col">
